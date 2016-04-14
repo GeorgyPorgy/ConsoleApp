@@ -32,8 +32,8 @@ namespace J2534
                 j2534Devices.Add(new PassThruDevice(
                    (string)deviceKey.GetValue("Vendor", ""),
                    (string)deviceKey.GetValue("Name", ""),
-                   (string)deviceKey.GetValue("ConfigApplication", ""),
                    (string)deviceKey.GetValue("FunctionLibrary", ""),
+                   (string)deviceKey.GetValue("ConfigApplication", ""),
 
                    (int)deviceKey.GetValue("CAN", 0),
                    (int)deviceKey.GetValue("ISO15765", 0),
