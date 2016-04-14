@@ -1,0 +1,5 @@
+c:\Users\Georgi Kostadinov\Documents\Visual Studio 2015\Projects\Volvo\J2534\bin\Debug\PassThru.dll
+c:\Users\Georgi Kostadinov\Documents\Visual Studio 2015\Projects\Volvo\J2534\bin\Debug\PassThru.pdb
+c:\Users\Georgi Kostadinov\Documents\Visual Studio 2015\Projects\Volvo\J2534\obj\Debug\PassThru.dll
+c:\Users\Georgi Kostadinov\Documents\Visual Studio 2015\Projects\Volvo\J2534\obj\Debug\PassThru.pdb
+C:\Users\Georgi Kostadinov\Documents\Visual Studio 2015\Projects\Volvo\J2534\obj\Debug\J2534.csprojResolveAssemblyReference.cache
