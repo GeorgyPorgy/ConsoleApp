@@ -15,21 +15,20 @@ namespace ConsoleAppJ2534
 
             UserInterface ConsoleApp = new UserInterface();
 
-            List<PassThruDevice> AvalibleInterfaces = DetectPassThruDrv.ListDevices();
+            List<PassThruRegistryRecord> AvalibleRegistryRecord = DetectPassThruDrv.ListDevices();
 
-            int SelectedOption =  ConsoleApp.SelectJ2534Interface(AvalibleInterfaces);
+            int SelectedOption =  ConsoleApp.SelectJ2534Interface(AvalibleRegistryRecord);
 
-            if (SelectedOption != 0)
+            if (SelectedOption == 0)
             {
-                ConsoleApp.ShowMessage("Failed to load interface library");
-                return;
+                throw new System.ArgumentException("Failed to detect installed interface!", "original");
             }
 
-            IPassThru Interface = DynamicPassThru.GetInstance(AvalibleInterfaces[SelectedOption - 1].FunctionLibrary);
+            PassThruInterface CommunicationInterface = new PassThruInterface(ConsoleApp, AvalibleRegistryRecord[SelectedOption - 1]);
 
-            ConsoleApp.ShowMessage("Opening Device");
+            CommunicationInterface.Connect();
+            CommunicationInterface.Diconnect();         
 
-            Interface.Dispose();
         }
     }
 
@@ -38,7 +37,7 @@ namespace ConsoleAppJ2534
         private int SelectedOption;
         private int IntfCntr;
 
-        public int SelectJ2534Interface (List<PassThruDevice> AvalibleInterfaces)
+        public int SelectJ2534Interface (List<PassThruRegistryRecord> AvalibleInterfaces)
         {
 
             Console.WriteLine("\nList of avalible interfaces:");
@@ -50,7 +49,7 @@ namespace ConsoleAppJ2534
             }
 
             IntfCntr = 1;
-            foreach (PassThruDevice _interface in AvalibleInterfaces)
+            foreach (PassThruRegistryRecord _interface in AvalibleInterfaces)
             {
 
                 Console.WriteLine(string.Format("{0}.{1}      [{2}]", IntfCntr, _interface.Name, _interface.Vendor));
@@ -74,18 +73,60 @@ namespace ConsoleAppJ2534
         {
             Console.WriteLine("\n" + Msg);
         }
+        public void ShowTrafic()
+        {
+
+        }
     }
 
-    class PassThrueInterface
+    class PassThruInterface
     {
-        public int OpenChannel()
+        private IPassThru _Instance;
+        private UserInterface _UI;
+        private PassThruRegistryRecord _SelectedJ2534Device;
+        private PassThruDevice device;
+
+
+        public PassThruInterface (UserInterface UI, PassThruRegistryRecord SelectedJ2534Device)
         {
-            return 0;
+            _UI = UI;
+            _SelectedJ2534Device = SelectedJ2534Device;
+            _Instance = DynamicPassThru.GetInstance(_SelectedJ2534Device.FunctionLibrary);
+        }
+
+        ~PassThruInterface()
+        {
+            if (_Instance != null) _Instance.Dispose();
+
+            _Instance = null;
+        }
+
+
+        public PassThruStatus Connect()
+        {
+
+            _UI.ShowMessage("Opening Device");
+            device = PassThruDevice.GetInstance(_Instance);
+            device.Open();
+
+            return PassThruStatus.NoError;
         }
         
-        public int CloseChannel()
+        public PassThruStatus ReadMsg()
         {
-            return 0;
+            return PassThruStatus.NoError;
+        }
+
+        public PassThruStatus SendMsg()
+        {
+            return PassThruStatus.NoError;
+        }
+
+        public PassThruStatus Diconnect()
+        {
+            _UI.ShowMessage("Closing device");
+            device.Close();
+            return PassThruStatus.NoError;
         }
 
     }

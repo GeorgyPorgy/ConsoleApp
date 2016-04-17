@@ -40,9 +40,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PassThruChannel.cs" />
     <Compile Include="PassThruDevice.cs" />
     <Compile Include="DetectPassThruDrv.cs" />
     <Compile Include="DynamicPassThru.cs" />
+    <Compile Include="PassThruUtility.cs" />
     <Compile Include="PassTruTypes.cs" />
     <Compile Include="IPassThru.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

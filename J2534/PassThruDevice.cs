@@ -8,102 +8,95 @@ namespace J2534
 {
     public class PassThruDevice
     {
-        public string Vendor { get; set; }
-        public string Name { get; set; }
-        public string FunctionLibrary { get; set; }
-        public string ConfigApplication { get; set; }
-        public int CANChannels { get; set; }
-        public int ISO15765Channels { get; set; }
-        public int J1850PWMChannels { get; set; }
-        public int J1850VPWChannels { get; set; }
-        public int ISO9141Channels { get; set; }
-        public int ISO14230Channels { get; set; }
-        public int SCI_A_ENGINEChannels { get; set; }
-        public int SCI_A_TRANSChannels { get; set; }
-        public int SCI_B_ENGINEChannels { get; set; }
-        public int SCI_B_TRANSChannels { get; set; }
-        public int DiCECompatible { get; set; }
+        /// <summary>
+        /// Underlying implementation
+        /// </summary>
+        private IPassThru implementation;
 
-        public PassThruDevice (string _Vendor, string _Name, string _FunctionLibrary, string _ConfigApplication,
-            int _CANChannels, int _ISO15765Channels, int _J1850PWMChannels, int _J1850VPWChannels, int _ISO9141Channels,
-            int _ISO14230Channels, int _SCI_A_ENGINEChannels, int _SCI_A_TRANSChannels, int _SCI_B_ENGINEChannels, 
-            int _SCI_B_TRANSChannels, int _DiCECompatible)
+        /// <summary>
+        /// J2534 ID for this device
+        /// </summary>
+        private UInt32 deviceId;
+
+        /// <summary>
+        /// Private constructor to force consumers to use GetInstance
+        /// </summary>
+        private PassThruDevice(IPassThru implementation)
         {
-            this.Vendor = _Vendor;
-            this.Name = _Name;
-            this.FunctionLibrary = _FunctionLibrary;
-            this.ConfigApplication = _ConfigApplication;
-            this.CANChannels = _CANChannels;
-            this.ISO15765Channels = _ISO15765Channels;
-            this.J1850PWMChannels = _J1850PWMChannels;
-            this.J1850VPWChannels = _J1850VPWChannels;
-            this.ISO9141Channels = _ISO9141Channels;
-            this.ISO14230Channels = _ISO14230Channels;
-            this.SCI_A_ENGINEChannels = _SCI_A_ENGINEChannels;
-            this.SCI_A_TRANSChannels = _SCI_A_TRANSChannels;
-            this.SCI_B_ENGINEChannels = _SCI_B_ENGINEChannels;
-            this.SCI_B_TRANSChannels = _SCI_B_TRANSChannels;
-            this.DiCECompatible = _DiCECompatible;
+            this.implementation = implementation;
         }
 
-        public bool IsCANSupported
+        /// <summary>
+        /// Creates a PassThruDevice
+        /// </summary>
+        public static PassThruDevice GetInstance(IPassThru implementation)
         {
-            get { return (CANChannels > 0 ? true : false); }
+            return new PassThruDevice(implementation);
         }
 
-        public bool IsISO15765Supported
+        /// <summary>
+        /// Open a J2534 device
+        /// </summary>
+        public void Open()
         {
-            get { return (ISO15765Channels > 0 ? true : false); }
+            // Name is reserved, must be null.
+            string name = null;
+
+            PassThruStatus status = this.implementation.PassThruOpen(name, out this.deviceId);
+            PassThruUtility.ThrowIfError(status);
         }
 
-        public bool IsJ1850PWMSupported
+        /// <summary>
+        /// Close a J2534 device
+        /// </summary>
+        public void Close()
         {
-            get { return (J1850PWMChannels > 0 ? true : false); }
+            PassThruStatus status = this.implementation.PassThruClose(this.deviceId);
+            PassThruUtility.ThrowIfError(status);
         }
 
-        public bool IsJ1850VPWSupported
+        /// <summary>
+        /// Opens a communication channel
+        /// </summary>
+        /// <param name="protocolId">See Protocol enumeration</param>
+        /// <param name="Flags">See ConnectFlags enumeration</param>
+        /// <param name="BaudRate">See BaudRate enumeration</param>
+        /// <param name="pChannelID">Will be set to the id of the opened channel</param>
+        /// <returns>See Status enumeration</returns>
+        public PassThruChannel OpenChannel(
+            PassThruProtocol protocolId,
+            PassThruConnectFlags flags,
+            PassThruBaudRate baudRate)
         {
-            get { return (J1850VPWChannels > 0 ? true : false); }
+            UInt32 channelId;
+            PassThruStatus status = this.implementation.PassThruConnect(
+                this.deviceId,
+                protocolId,
+                flags,
+                baudRate,
+                out channelId);
+            PassThruUtility.ThrowIfError(status);
+            return PassThruChannel.GetInstance(this.implementation, channelId);
         }
 
-        public bool IsISO9141Supported
+        /// <summary>
+        /// Retreive version strings from the PassThru DLL.
+        /// </summary>
+        /// <param name="DeviceID">Device identifier returned from PassThruOpen</param>
+        /// <param name="firmwareVersion">Firmware version string.  Allocate at least 80 characters.</param>
+        /// <param name="dllVersion">DLL version string.  Allocate at least 80 characters.</param>
+        /// <param name="apiVersion">API version string.  Allocate at least 80 characters.</param>
+        public void ReadVersion(
+            out string firmwareVersion,
+            out string dllVersion,
+            out string apiVersion)
         {
-            get { return (ISO9141Channels > 0 ? true : false); }
-        }
-
-        public bool IsISO14230Supported
-        {
-            get { return (ISO14230Channels > 0 ? true : false); }
-        }
-
-        public bool IsSCI_A_ENGINESupported
-        {
-            get { return (SCI_A_ENGINEChannels > 0 ? true : false); }
-        }
-
-        public bool IsSCI_A_TRANSSupported
-        {
-            get { return (SCI_A_TRANSChannels > 0 ? true : false); }
-        }
-
-        public bool IsSCI_B_ENGINESupported
-        {
-            get { return (SCI_B_ENGINEChannels > 0 ? true : false); }
-        }
-
-        public bool IsSCI_B_TRANSSupported
-        {
-            get { return (SCI_B_TRANSChannels > 0 ? true : false); }
-        }
-
-        public bool IsDiCECompatible
-        {
-            get { return (DiCECompatible > 0 ? true : false); }
-        }
-
-        public override string ToString()
-        {
-            return Name;
+            PassThruStatus status = this.implementation.PassThruReadVersion(
+                this.deviceId,
+                out firmwareVersion,
+                out dllVersion,
+                out apiVersion);
+            PassThruUtility.ThrowIfError(status);
         }
     }
 }
