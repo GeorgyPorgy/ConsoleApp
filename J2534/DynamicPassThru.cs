@@ -142,9 +142,29 @@ namespace J2534
             return (PassThruStatus)this.passThruStopMsgFilter(ChannelID, FilterID);
         }
 
-        public PassThruStatus PassThruReadVersion(uint DeviceID, out string pFirmwareVersion, out string pDllVersion, out string pApiVersion)
+        public PassThruStatus PassThruReadVersion(uint DeviceID, ref string pFirmwareVersion, ref string pDllVersion, ref string pApiVersion)
         {
-            return (PassThruStatus)this.passThruReadVersion(DeviceID, out pFirmwareVersion, out pDllVersion, out pApiVersion);
+            //return (PassThruStatus)this.passThruReadVersion(DeviceID, out pFirmwareVersion, out pDllVersion, out pApiVersion);
+            string FWmessage = new string(' ', 80);
+            string Dllmessage = new string(' ', 80);
+            string Apimessage = new string(' ', 80);
+
+            PassThruStatus status = (PassThruStatus)this.passThruReadVersion(DeviceID, ref FWmessage, ref Dllmessage, ref Apimessage);
+
+            if (status == PassThruStatus.NoError)
+            {
+                char[] trimChars = new char[1];
+                pFirmwareVersion = FWmessage.TrimEnd(new char[] { ' ' }).TrimEnd(trimChars);
+                pDllVersion = Dllmessage.TrimEnd(new char[] { ' ' }).TrimEnd(trimChars);
+                pApiVersion = Apimessage.TrimEnd(new char[] { ' ' }).TrimEnd(trimChars);
+            }
+            else
+            {
+                pFirmwareVersion = string.Empty;
+                pDllVersion = string.Empty;
+                pApiVersion = string.Empty;
+            }
+            return status;
         }
 
         public PassThruStatus PassThruGetLastError(out string errorDescription)
@@ -334,12 +354,15 @@ namespace J2534
         /// <returns></returns>
         private delegate Int32 PassThruReadVersionDelegate(
             UInt32 DeviceID,
-            [MarshalAs(UnmanagedType.LPStr, SizeConst = 80)]
-            out string pFirmwareVersion,
-            [MarshalAs(UnmanagedType.LPStr, SizeConst = 80)]
-            out string pDllVersion,
-            [MarshalAs(UnmanagedType.LPStr, SizeConst = 80)]
-            out string pApiVersion);
+            //[Out][MarshalAs(UnmanagedType.LPArray, SizeConst = 80)]
+            //byte[] pFirmwareVersion,
+            [MarshalAs(UnmanagedType.VBByRefStr)] ref string pFirmwareVersion,
+            //[Out][MarshalAs(UnmanagedType.LPArray, SizeConst = 80)]
+            //byte[] pDllVersion,
+            [MarshalAs(UnmanagedType.VBByRefStr)] ref string pDllVersion,
+            //[Out][MarshalAs(UnmanagedType.LPArray, SizeConst = 80)]
+            //byte[] pApiVersion);
+            [MarshalAs(UnmanagedType.VBByRefStr)] ref string pApiVersion);
 
         /// <summary>
         /// Retrieve error information regarding a previous PassThru API call.

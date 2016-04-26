@@ -50,10 +50,12 @@ namespace J2534
         Sci_A_Trans = 8,
         Sci_B_Engine = 9,
         Sci_B_Trans = 10,
+        SETEK_Specific = 0x10000000,
     }
 
     public enum PassThruConnectFlags
     {
+        SETEK_Specific = 0x20000000,
         Iso9141KLineOnly = 4096,
         CanIDBoth = 2048,
         Iso9141NoChecksum = 512,
@@ -62,7 +64,10 @@ namespace J2534
 
     public enum PassThruBaudRate
     {
-        Rate4800 = 4800,
+       // Rate4800 = 4800,
+        Rate125K = 125000,
+        Rate250k = 250000,
+        Rate500k = 500000,
     }
 
     public enum PassThruFilterType

@@ -167,10 +167,13 @@ namespace J2534
         /// <param name="pApiVersion">API version string.  Allocate at least 80 characters.</param>
         /// <returns></returns>
         PassThruStatus PassThruReadVersion(
-            UInt32 DeviceID,
-            out string pFirmwareVersion,
-            out string pDllVersion,
-            out string pApiVersion);
+             UInt32 DeviceID,
+             [MarshalAs(UnmanagedType.VBByRefStr)]
+             ref string pFirmwareVersion,
+             [MarshalAs(UnmanagedType.VBByRefStr)]
+             ref string pDllVersion,
+             [MarshalAs(UnmanagedType.VBByRefStr)]
+             ref string pApiVersion);
 
         /// <summary>
         /// Retrieve error information regarding a previous PassThru API call.

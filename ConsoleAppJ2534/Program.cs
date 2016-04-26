@@ -84,8 +84,8 @@ namespace ConsoleAppJ2534
         private IPassThru _Instance;
         private UserInterface _UI;
         private PassThruRegistryRecord _SelectedJ2534Device;
-        private PassThruDevice device;
-
+        private PassThruDevice _device;
+        private PassThruChannel _channel;
 
         public PassThruInterface (UserInterface UI, PassThruRegistryRecord SelectedJ2534Device)
         {
@@ -104,10 +104,21 @@ namespace ConsoleAppJ2534
 
         public PassThruStatus Connect()
         {
+            string _FWVer = string.Empty, _DllVer = string.Empty, _ApiVer = string.Empty;
 
             _UI.ShowMessage("Opening Device");
-            device = PassThruDevice.GetInstance(_Instance);
-            device.Open();
+            _device = PassThruDevice.GetInstance(_Instance);
+            _device.Open();
+
+            _device.ReadVersion( ref _FWVer, ref _DllVer, ref _ApiVer);
+            _UI.ShowMessage(string.Format("Fw V{0}\nDll V{1}\nApi V{2}", _FWVer, _DllVer.Replace(',','.') , _ApiVer));
+
+            _UI.ShowMessage("Opening Channel");
+            _channel = _device.OpenChannel(
+                PassThruProtocol.SETEK_Specific | PassThruProtocol.J1850Vpw,
+                PassThruConnectFlags.SETEK_Specific | PassThruConnectFlags.Can29BitID,
+                PassThruBaudRate.Rate125K);
+
 
             return PassThruStatus.NoError;
         }
@@ -124,8 +135,11 @@ namespace ConsoleAppJ2534
 
         public PassThruStatus Diconnect()
         {
-            _UI.ShowMessage("Closing device");
-            device.Close();
+            _UI.ShowMessage("Closing Channel");
+            _channel.Close();
+
+            _UI.ShowMessage("Closing Device");
+            _device.Close();
             return PassThruStatus.NoError;
         }
 
