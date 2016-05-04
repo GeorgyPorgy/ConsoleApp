@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using J2534;
 
 namespace ConsoleAppJ2534
@@ -12,7 +12,7 @@ namespace ConsoleAppJ2534
     {
         static void Main(string[] args)
         {
-
+            //bool _continue = true;
             UserInterface ConsoleApp = new UserInterface();
 
             List<PassThruRegistryRecord> AvalibleRegistryRecord = DetectPassThruDrv.ListDevices();
@@ -27,8 +27,8 @@ namespace ConsoleAppJ2534
             PassThruInterface CommunicationInterface = new PassThruInterface(ConsoleApp, AvalibleRegistryRecord[SelectedOption - 1]);
 
             CommunicationInterface.Connect();
+            CommunicationInterface.StartThread();
             CommunicationInterface.Diconnect();         
-
         }
     }
 
@@ -36,6 +36,7 @@ namespace ConsoleAppJ2534
     {
         private int SelectedOption;
         private int IntfCntr;
+        private StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
 
         public int SelectJ2534Interface (List<PassThruRegistryRecord> AvalibleInterfaces)
         {
@@ -77,6 +78,16 @@ namespace ConsoleAppJ2534
         {
 
         }
+
+        public bool ReadLine()
+        {
+            string message = Console.ReadLine();
+
+            if (stringComparer.Equals("quit", message)) return true;
+
+            return false;
+
+        }
     }
 
     class PassThruInterface
@@ -86,6 +97,9 @@ namespace ConsoleAppJ2534
         private PassThruRegistryRecord _SelectedJ2534Device;
         private PassThruDevice _device;
         private PassThruChannel _channel;
+        private Thread readThread;
+        private static bool _continue;
+
 
         public PassThruInterface (UserInterface UI, PassThruRegistryRecord SelectedJ2534Device)
         {
@@ -96,11 +110,11 @@ namespace ConsoleAppJ2534
 
         ~PassThruInterface()
         {
+
             if (_Instance != null) _Instance.Dispose();
 
             _Instance = null;
         }
-
 
         public PassThruStatus Connect()
         {
@@ -119,20 +133,9 @@ namespace ConsoleAppJ2534
                 PassThruConnectFlags.SETEK_Specific | PassThruConnectFlags.Can29BitID,
                 PassThruBaudRate.Rate125K);
 
-
             return PassThruStatus.NoError;
         }
         
-        public PassThruStatus ReadMsg()
-        {
-            return PassThruStatus.NoError;
-        }
-
-        public PassThruStatus SendMsg()
-        {
-            return PassThruStatus.NoError;
-        }
-
         public PassThruStatus Diconnect()
         {
             _UI.ShowMessage("Closing Channel");
@@ -141,6 +144,33 @@ namespace ConsoleAppJ2534
             _UI.ShowMessage("Closing Device");
             _device.Close();
             return PassThruStatus.NoError;
+        }
+
+        public void StartThread()
+        {
+            readThread = new Thread(Read);
+            _continue = true;
+
+            _UI.ShowMessage("Starting thread");
+            readThread.Start();
+
+            _UI.ShowMessage("Enter QUIT to exit");
+
+            while (_continue)
+            {
+                if (_UI.ReadLine()) _continue = false;
+            }
+
+            _UI.ShowMessage("Terminating thread");
+            readThread.Join();
+            readThread = null;
+        }
+
+        private static void Read()
+        {
+            while (_continue) { }
+            // read message 
+            // if success print message details 
         }
 
     }
