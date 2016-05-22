@@ -50,7 +50,7 @@ namespace J2534
         Sci_A_Trans = 8,
         Sci_B_Engine = 9,
         Sci_B_Trans = 10,
-        SETEK_Specific = 0x10000000,
+        Can_XON_XOFF = 0x10000001,
     }
 
     public enum PassThruConnectFlags
@@ -191,6 +191,7 @@ namespace J2534
         DataBits = 0x20,
         FiveBaudMod = 0x21,
         Iso15765WaitFrameTransferMax = 0x25,
+        canXONXOFFStMin = 268435457,
     }
 
     [StructLayout(LayoutKind.Sequential)]

@@ -27,7 +27,19 @@ namespace ConsoleAppJ2534
             PassThruInterface CommunicationInterface = new PassThruInterface(ConsoleApp, AvalibleRegistryRecord[SelectedOption - 1]);
 
             CommunicationInterface.Connect();
+
+            ConsoleApp.ShowMessage("Starting thread");
             CommunicationInterface.StartThread();
+
+            ConsoleApp.ShowMessage("Enter QUIT to exit");
+
+            while (CommunicationInterface._continue)
+            {
+                if (ConsoleApp.ReadLine()) CommunicationInterface.StopThread(); 
+            }
+
+            ConsoleApp.ShowMessage("Terminating thread");
+
             CommunicationInterface.Diconnect();         
         }
     }
@@ -97,8 +109,8 @@ namespace ConsoleAppJ2534
         private PassThruRegistryRecord _SelectedJ2534Device;
         private PassThruDevice _device;
         private PassThruChannel _channel;
-        private Thread readThread;
-        private static bool _continue;
+        private Thread readThread = null;
+        public volatile bool _continue;
 
 
         public PassThruInterface (UserInterface UI, PassThruRegistryRecord SelectedJ2534Device)
@@ -129,9 +141,11 @@ namespace ConsoleAppJ2534
 
             _UI.ShowMessage("Opening Channel");
             _channel = _device.OpenChannel(
-                PassThruProtocol.SETEK_Specific | PassThruProtocol.J1850Vpw,
+                PassThruProtocol.Can_XON_XOFF  ,
                 PassThruConnectFlags.SETEK_Specific | PassThruConnectFlags.Can29BitID,
                 PassThruBaudRate.Rate125K);
+
+            _channel.InitializeSsm();
 
             return PassThruStatus.NoError;
         }
@@ -148,29 +162,41 @@ namespace ConsoleAppJ2534
 
         public void StartThread()
         {
-            readThread = new Thread(Read);
-            _continue = true;
-
-            _UI.ShowMessage("Starting thread");
-            readThread.Start();
-
-            _UI.ShowMessage("Enter QUIT to exit");
-
-            while (_continue)
+            if (readThread == null)
             {
-                if (_UI.ReadLine()) _continue = false;
+                readThread = new Thread(Read);
+                _continue = true;
+
+                readThread.Start();
+            }
+        }
+
+        public void StopThread()
+        {
+            if (readThread != null)
+            {
+                _continue = false;
+                readThread.Join();
             }
 
-            _UI.ShowMessage("Terminating thread");
-            readThread.Join();
             readThread = null;
         }
 
-        private static void Read()
+        private void Read()
         {
-            while (_continue) { }
-            // read message 
-            // if success print message details 
+            PassThruMsg received = new PassThruMsg(PassThruProtocol.Can_XON_XOFF);
+
+            while (_continue)
+            {
+                /*bool success = _channel.ReadMessage(received, TimeSpan.FromMilliseconds(1000));
+
+                /*if (success)
+                {
+                    _UI.ShowMessage(string.Format("Data {0}",received.Data.ToString()));
+                }*/
+                
+            }
+
         }
 
     }

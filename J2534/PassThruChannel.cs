@@ -203,10 +203,13 @@ namespace J2534
         /// </summary>
         public void InitializeSsm()
         {
-            this.InitializeSsmIoCtl();
-            this.InitializeSsmFilter();
-        }
+            /*this.InitializeSsmIoCtl();
+            this.InitializeSsmFilter();*/
 
+            this.InitalizeCanXonXoffIoCtl();
+            this.InitializeSTMin();
+        }
+        /*
         /// <summary>
         /// Send the right IoCtls to set up an SSM connection
         /// </summary>
@@ -252,5 +255,48 @@ namespace J2534
                 out filterId);
             PassThruUtility.ThrowIfError(status);
         }
+        */
+
+        /// <summary>
+        /// Send the right IoCtls to set up an CAN_XON_XOFF channel settings 
+        /// </summary>
+        private void InitalizeCanXonXoffIoCtl()
+        {
+            SetConfiguration DataRate = new SetConfiguration(SetConfigurationParameter.DataRate, 125000);
+            SetConfiguration Loopback = new SetConfiguration(SetConfigurationParameter.Loopback, 0);
+            SetConfiguration BitSamplePoint = new SetConfiguration(SetConfigurationParameter.BitSamplePoint, 68);
+            SetConfiguration[] setConfigurationArray = new SetConfiguration[] { DataRate, Loopback, BitSamplePoint };
+
+            using (SetConfigurationList setConfigurationList = new SetConfigurationList(setConfigurationArray))
+            {
+                PassThruStatus status = this.implementation.PassThruIoctl(
+                    this.channelId,
+                    PassThruIOControl.SetConfig,
+                    setConfigurationList.Pointer,
+                    IntPtr.Zero);
+                PassThruUtility.ThrowIfError(status);
+            }
+        }
+
+        /// <summary>
+        /// Send the right IoCtls to set up an CAN_XON_XOFF channel ST_Min settings 
+        /// </summary>
+        private void InitializeSTMin()
+        {
+            
+            SetConfiguration STMIN = new SetConfiguration(SetConfigurationParameter.canXONXOFFStMin, 40);
+            SetConfiguration[] setConfigurationArray = new SetConfiguration[] { STMIN };
+
+            using (SetConfigurationList setConfigurationList = new SetConfigurationList(setConfigurationArray))
+            {
+                PassThruStatus status = this.implementation.PassThruIoctl(
+                    this.channelId,
+                    PassThruIOControl.SetConfig,
+                    setConfigurationList.Pointer,
+                    IntPtr.Zero);
+                PassThruUtility.ThrowIfError(status);
+            }
+        }
+
     }
 }
