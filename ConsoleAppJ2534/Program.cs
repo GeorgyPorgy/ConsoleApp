@@ -132,9 +132,9 @@ namespace ConsoleAppJ2534
         {
             string _FWVer, _DllVer , _ApiVer ;
 
-            _UI.ShowMessage("Opening Device");
+            _UI.ShowMessage("Opening Device " + _SelectedJ2534Device.Name);
             _device = PassThruDevice.GetInstance(_Instance);
-            _device.Open();
+            _device.Open(_SelectedJ2534Device.Name);
 
             _device.ReadVersion(out _FWVer, out _DllVer, out _ApiVer);
             _UI.ShowMessage(string.Format("Fw V{0}\nDll V{1}\nApi V{2}", _FWVer, _DllVer.Replace(',','.') , _ApiVer));

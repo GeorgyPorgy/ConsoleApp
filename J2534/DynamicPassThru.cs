@@ -82,7 +82,11 @@ namespace J2534
 
         public PassThruStatus PassThruOpen(string pName, out uint pDeviceId)
         {
-            return (PassThruStatus)this.passThruOpen(pName, out pDeviceId);
+            byte[] _pName = ASCIIEncoding.ASCII.GetBytes(pName);
+            Array.Resize<byte>(ref _pName, _pName.Length + 1);
+            _pName[_pName.Length - 1] = 0;
+
+            return (PassThruStatus)this.passThruOpen(_pName, out pDeviceId);
         }
 
         public PassThruStatus PassThruClose(uint DeviceId)
@@ -202,7 +206,11 @@ namespace J2534
         /// <param name="pName">reserved for future use, must be null</param>
         /// <param name="pDeviceId">will be set to the id of the opened device</param>
         /// <returns>See Status enumeration</returns>
-        private delegate Int32 PassThruOpenDelegate(string pName, out UInt32 pDeviceId);
+        /// private delegate Int32 PassThruOpenDelegate(string pName, out UInt32 pDeviceId);
+        private delegate Int32 PassThruOpenDelegate(
+            [MarshalAs(UnmanagedType.LPArray)]
+            byte[] pName, 
+            out UInt32 pDeviceId);
 
         /// <summary>
         /// Close a J2534 device

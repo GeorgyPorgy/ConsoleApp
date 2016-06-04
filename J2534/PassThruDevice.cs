@@ -37,10 +37,8 @@ namespace J2534
         /// <summary>
         /// Open a J2534 device
         /// </summary>
-        public void Open()
+        public void Open(string name)
         {
-            // Name is reserved, must be null.
-            string name = null;
 
             PassThruStatus status = this.implementation.PassThruOpen(name, out this.deviceId);
             PassThruUtility.ThrowIfError(status);
