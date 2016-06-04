@@ -101,6 +101,11 @@ namespace J2534
     public enum PassThruTxFlags
     {
         None = 0,
+
+        /// <summary>
+        /// If set, indicates a 29-bit CAN ID; if not set, indicates an 11-bit CAN ID.
+        /// </summary>
+        Can29BitId = 256,
     }
 
     [Flags]

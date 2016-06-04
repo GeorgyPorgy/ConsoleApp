@@ -130,13 +130,13 @@ namespace ConsoleAppJ2534
 
         public PassThruStatus Connect()
         {
-            string _FWVer = string.Empty, _DllVer = string.Empty, _ApiVer = string.Empty;
+            string _FWVer, _DllVer , _ApiVer ;
 
             _UI.ShowMessage("Opening Device");
             _device = PassThruDevice.GetInstance(_Instance);
             _device.Open();
 
-            _device.ReadVersion( ref _FWVer, ref _DllVer, ref _ApiVer);
+            _device.ReadVersion(out _FWVer, out _DllVer, out _ApiVer);
             _UI.ShowMessage(string.Format("Fw V{0}\nDll V{1}\nApi V{2}", _FWVer, _DllVer.Replace(',','.') , _ApiVer));
 
             _UI.ShowMessage("Opening Channel");
@@ -146,6 +146,7 @@ namespace ConsoleAppJ2534
                 PassThruBaudRate.Rate125K);
 
             _channel.InitializeSsm();
+
 
             return PassThruStatus.NoError;
         }
@@ -190,9 +191,9 @@ namespace ConsoleAppJ2534
             {
                 /*bool success = _channel.ReadMessage(received, TimeSpan.FromMilliseconds(1000));
 
-                /*if (success)
+                if (success)
                 {
-                    _UI.ShowMessage(string.Format("Data {0}",received.Data.ToString()));
+                    _UI.ShowMessage(string.Format("Data {0}", received.Data.ToString()));
                 }*/
                 
             }

@@ -87,15 +87,15 @@ namespace J2534
         /// <param name="dllVersion">DLL version string.  Allocate at least 80 characters.</param>
         /// <param name="apiVersion">API version string.  Allocate at least 80 characters.</param>
         public void ReadVersion(
-            ref string firmwareVersion,
-            ref string dllVersion,
-            ref string apiVersion)
+            out string firmwareVersion,
+            out string dllVersion,
+            out string apiVersion)
         {
             PassThruStatus status = this.implementation.PassThruReadVersion(
                 this.deviceId,
-                ref firmwareVersion,
-                ref dllVersion,
-                ref apiVersion);
+                out firmwareVersion,
+                out dllVersion,
+                out apiVersion);
             PassThruUtility.ThrowIfError(status);
         }
     }

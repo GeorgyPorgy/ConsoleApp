@@ -56,7 +56,7 @@ namespace J2534
         {
             PassThruStatus status = this.implementation.PassThruReadMsg(
                 this.channelId,
-                message,
+                out message,
                 (UInt32)timeout.TotalMilliseconds);
             PassThruUtility.ThrowIfError(status);
             return true;
@@ -98,7 +98,7 @@ namespace J2534
             PassThruStatus status = this.implementation.PassThruWriteMsgs(
                 this.channelId,
                 messages,
-                ref messageCount,
+                out messageCount,
                 (UInt32)timeout.TotalMilliseconds);
             PassThruUtility.ThrowIfError(status);
         }
@@ -145,47 +145,23 @@ namespace J2534
         public UInt32 StartMessageFilter(
             PassThruFilterType filterType,
             PassThruMsg maskMessage,
-            PassThruMsg patternMessage)
+            PassThruMsg patternMessage,
+            PassThruMsg flowControlMessage)
         {
-            UInt32 filterId;
-            PassThruMsg flowControl = new PassThruMsg(PassThruProtocol.Iso9141);
+            UInt32 filterId = 0;
+            //PassThruMsg flowControl = new PassThruMsg(PassThruProtocol.Can_XON_XOFF);
             PassThruStatus status = this.implementation.PassThruStartMsgFilter(
                 this.channelId,
                 (UInt32)filterType,
                 maskMessage,
                 patternMessage,
-                flowControl,
-                out filterId);
-            PassThruUtility.ThrowIfError(status);
-            return filterId;
-        }
-
-        /// <summary>
-        /// Apply a flow-control filter to incoming messages.
-        /// </summary>
-        /// <param name="ChannelID">Channel identifier returned from PassThruConnect</param>
-        /// <param name="FilterType">See FilterType enumeration</param>
-        /// <param name="pMaskMsg">This message will be bitwise-ANDed with incoming messages to mask irrelevant bits.</param>
-        /// <param name="pPatternMsg">This message will be compared with the masked messsage; if equal the FilterType operation will be applied.</param>
-        /// <param name="pFlowControlMsg">Points to the CAN ID used for segmented sends and receives.</param>
-        /// <param name="pFilterID">Upon return, will be set with an ID for the newly applied filter.</param>
-        /// <returns>message filter ID</returns>
-        public UInt32 StartFlowControlMessageFilter(
-            PassThruMsg maskMessage,
-            PassThruMsg patternMessage,
-            PassThruMsg flowControlMessage)
-        {
-            UInt32 filterId;
-            PassThruStatus status = this.implementation.PassThruStartMsgFilter(
-                this.channelId,
-                (UInt32)PassThruFilterType.FlowControl,
-                maskMessage,
-                patternMessage,
+                //flowControl,
                 flowControlMessage,
                 out filterId);
             PassThruUtility.ThrowIfError(status);
             return filterId;
         }
+
 
         /// <summary>
         /// Removes the given message filter.
@@ -208,6 +184,7 @@ namespace J2534
 
             this.InitalizeCanXonXoffIoCtl();
             this.InitializeSTMin();
+            //this.InitializePassFilter();
         }
         /*
         /// <summary>
@@ -229,7 +206,7 @@ namespace J2534
                     IntPtr.Zero);
                 PassThruUtility.ThrowIfError(status);
             }
-        }
+        } 
 
         /// <summary>
         /// Set up the filters for an SSM connection
@@ -254,8 +231,7 @@ namespace J2534
                 null,
                 out filterId);
             PassThruUtility.ThrowIfError(status);
-        }
-        */
+        } */
 
         /// <summary>
         /// Send the right IoCtls to set up an CAN_XON_XOFF channel settings 
@@ -296,6 +272,37 @@ namespace J2534
                     IntPtr.Zero);
                 PassThruUtility.ThrowIfError(status);
             }
+        }
+
+        /// <summary>
+        /// Set up the filters for an Can_XON_XOFF connection
+        /// </summary>
+        private void InitializePassFilter()
+        {
+            PassThruMsg maskMsg = new PassThruMsg();
+            maskMsg.ProtocolID = PassThruProtocol.Can_XON_XOFF;
+            maskMsg.TxFlags = PassThruTxFlags.Can29BitId;
+            maskMsg.Data = new byte[] { 0, 0, 0, 1 };
+            maskMsg.DataSize = (uint)maskMsg.Data.Length;
+
+            PassThruMsg patternMsg = new PassThruMsg();
+            patternMsg.ProtocolID = PassThruProtocol.Can_XON_XOFF;
+            patternMsg.TxFlags = PassThruTxFlags.Can29BitId;
+            patternMsg.Data = new byte[] { 0, 0, 0, 1 };
+            patternMsg.DataSize = (uint)patternMsg.Data.Length;
+
+            PassThruMsg FlowControlMsg = null;
+
+            UInt32 filterId = 0;
+
+            PassThruStatus status = this.implementation.PassThruStartMsgFilter(
+                this.channelId,
+                (UInt32)PassThruFilterType.Pass,
+                maskMsg,
+                patternMsg,
+                FlowControlMsg,
+                out filterId);
+            PassThruUtility.ThrowIfError(status);
         }
 
     }

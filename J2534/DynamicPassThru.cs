@@ -29,7 +29,7 @@ namespace J2534
         private PassThruWriteMsgsDelegate passThruWriteMsgs;
         private PassThruStartPeriodicMsgDelegate passThruStartPeriodicMsg;
         private PassThruStopPeriodicMsgDelegate passThruStopPeriodicMsg;
-        private PassThruStartMsgFilterDelegate passThruStartMsgFilter;
+        private PassThruStartMsgFilterDelegate passThruStartMsgFilter;     
         private PassThruStopMsgFilterDelegate passThruStopMsgFilter;
         private PassThruReadVersionDelegate passThruReadVersion;
         private PassThruGetLastErrorDelegate passThruGetLastError;
@@ -100,15 +100,15 @@ namespace J2534
             return (PassThruStatus)this.passThruDisconnect(ChannelID);
         }
 
-        public PassThruStatus PassThruReadMsg(uint ChannelID, PassThruMsg pMsg, uint Timeout)
+        public PassThruStatus PassThruReadMsg(uint ChannelID, out PassThruMsg pMsg, uint Timeout)
         {
             UInt32 numMsgs = 1;
-            return (PassThruStatus)this.passThruReadMsg(ChannelID, pMsg, ref numMsgs, Timeout);
+            return (PassThruStatus)this.passThruReadMsg(ChannelID, out pMsg, out numMsgs, Timeout);
         }
 
-        public PassThruStatus PassThruReadMsgs(uint ChannelID, PassThruMsg[] pMsgs, ref uint pNumMsgs, uint Timeout)
+        public PassThruStatus PassThruReadMsgs(uint ChannelID, out PassThruMsg[] pMsgs, out uint pNumMsgs, uint Timeout)
         {
-            return (PassThruStatus)this.passThruReadMsgs(ChannelID, pMsgs, ref pNumMsgs, Timeout);
+            return (PassThruStatus)this.passThruReadMsgs(ChannelID, out pMsgs, out pNumMsgs, Timeout);
         }
 
         public PassThruStatus PassThruWriteMsg(uint ChannelID, PassThruMsg pMsg, uint Timeout)
@@ -117,9 +117,9 @@ namespace J2534
             return (PassThruStatus)this.passThruWriteMsg(ChannelID, pMsg, ref numMsgs, Timeout);
         }
 
-        public PassThruStatus PassThruWriteMsgs(uint ChannelID, PassThruMsg[] pMsg, ref uint pNumMsgs, uint Timeout)
+        public PassThruStatus PassThruWriteMsgs(uint ChannelID, PassThruMsg[] pMsg, out uint pNumMsgs, uint Timeout)
         {
-            return (PassThruStatus)this.passThruWriteMsgs(ChannelID, pMsg, ref pNumMsgs, Timeout);
+            return (PassThruStatus)this.passThruWriteMsgs(ChannelID, pMsg, out pNumMsgs, Timeout);
         }
 
         public PassThruStatus PassThruStartPeriodicMsg(uint ChannelID, PassThruMsg pMsg, out uint pMsgId, uint TimeInterval)
@@ -137,26 +137,29 @@ namespace J2534
             return (PassThruStatus)this.passThruStartMsgFilter(ChannelID, FilterType, pMaskMsg, pPatternMsg, pFlowControlMsg, out pFilterID);
         }
 
+
         public PassThruStatus PassThruStopMsgFilter(uint ChannelID, uint FilterID)
         {
             return (PassThruStatus)this.passThruStopMsgFilter(ChannelID, FilterID);
         }
 
-        public PassThruStatus PassThruReadVersion(uint DeviceID, ref string pFirmwareVersion, ref string pDllVersion, ref string pApiVersion)
+        public PassThruStatus PassThruReadVersion(uint DeviceID, out string pFirmwareVersion, out string pDllVersion, out string pApiVersion)
         {
-            //return (PassThruStatus)this.passThruReadVersion(DeviceID, out pFirmwareVersion, out pDllVersion, out pApiVersion);
-            string FWmessage = new string(' ', 80);
-            string Dllmessage = new string(' ', 80);
-            string Apimessage = new string(' ', 80);
 
-            PassThruStatus status = (PassThruStatus)this.passThruReadVersion(DeviceID, ref FWmessage, ref Dllmessage, ref Apimessage);
+            byte[] FWMessage1 = new byte[80];
+            byte[] DllMessage1 = new byte[80];
+            byte[] ApiMessage1 = new byte[80];
+
+            PassThruStatus status = (PassThruStatus)this.passThruReadVersion(DeviceID, FWMessage1, DllMessage1, ApiMessage1);
 
             if (status == PassThruStatus.NoError)
             {
                 char[] trimChars = new char[1];
-                pFirmwareVersion = FWmessage.TrimEnd(new char[] { ' ' }).TrimEnd(trimChars);
-                pDllVersion = Dllmessage.TrimEnd(new char[] { ' ' }).TrimEnd(trimChars);
-                pApiVersion = Apimessage.TrimEnd(new char[] { ' ' }).TrimEnd(trimChars);
+                pFirmwareVersion = System.Text.Encoding.Default.GetString(FWMessage1).TrimEnd(new char[] { ' ' }).TrimEnd(trimChars);
+                
+                pDllVersion = System.Text.Encoding.Default.GetString(DllMessage1).TrimEnd(new char[] { ' ' }).TrimEnd(trimChars);
+                
+                pApiVersion = System.Text.Encoding.Default.GetString(ApiMessage1).TrimEnd(new char[] { ' ' }).TrimEnd(trimChars);
             }
             else
             {
@@ -241,9 +244,9 @@ namespace J2534
         /// <returns>See Status enumeration</returns>
         private delegate Int32 PassThruReadMsgDelegate(
             UInt32 ChannelID,
-            [In][Out][MarshalAs(UnmanagedType.LPStruct)]
-            PassThruMsg pMsg,
-            ref UInt32 pNumMsgs,
+            // [In][Out][MarshalAs(UnmanagedType.LPStruct)]
+           out PassThruMsg pMsg,
+            out UInt32 pNumMsgs,
             UInt32 Timeout);
 
         /// <summary>
@@ -256,9 +259,9 @@ namespace J2534
         /// <returns>See Status enumeration</returns>
         private delegate Int32 PassThruReadMsgsDelegate(
             UInt32 ChannelID,
-            [Out]
-            PassThruMsg[] pMsgs,
-            ref UInt32 pNumMsgs,
+            // [Out]
+            out PassThruMsg[] pMsgs,
+            out UInt32 pNumMsgs,
             UInt32 Timeout);
 
         /// <summary>
@@ -289,7 +292,7 @@ namespace J2534
             UInt32 ChannelID,
             [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 3)]
             PassThruMsg[] pMsg,
-            ref UInt32 pNumMsgs,
+            out UInt32 pNumMsgs,
             UInt32 Timeout);
 
         /// <summary>
@@ -323,16 +326,17 @@ namespace J2534
         /// <param name="FilterType">See FilterType enumeration</param>
         /// <param name="pMaskMsg">This message will be bitwise-ANDed with incoming messages to mask irrelevant bits.</param>
         /// <param name="pPatternMsg">This message will be compared with the masked messsage; if equal the FilterType operation will be applied.</param>
-        /// <param name="pFlowControlMsg">Must be null for Pass or Block filter types.  For FlowControl filters, points to the CAN ID used for segmented sends and receives.</param>
+        /// <param name="ptr">Must be null for Pass or Block filter types. </param>
         /// <param name="pFilterID">Upon return, will be set with an ID for the newly applied filter.</param>
         /// <returns>See Status enumeration</returns>
         private delegate Int32 PassThruStartMsgFilterDelegate(
             UInt32 ChannelID,
             UInt32 FilterType,
-            PassThruMsg pMaskMsg,
-            PassThruMsg pPatternMsg,
-            PassThruMsg pFlowControlMsg,
+            [In] PassThruMsg pMaskMsg,
+            [In] PassThruMsg pPatternMsg,
+            [In] PassThruMsg pFlowControlMsg,
             out UInt32 pFilterID);
+
 
         /// <summary>
         /// Removes the given message filter.
@@ -354,15 +358,15 @@ namespace J2534
         /// <returns></returns>
         private delegate Int32 PassThruReadVersionDelegate(
             UInt32 DeviceID,
-            //[Out][MarshalAs(UnmanagedType.LPArray, SizeConst = 80)]
-            //byte[] pFirmwareVersion,
-            [MarshalAs(UnmanagedType.VBByRefStr)] ref string pFirmwareVersion,
-            //[Out][MarshalAs(UnmanagedType.LPArray, SizeConst = 80)]
-            //byte[] pDllVersion,
-            [MarshalAs(UnmanagedType.VBByRefStr)] ref string pDllVersion,
-            //[Out][MarshalAs(UnmanagedType.LPArray, SizeConst = 80)]
-            //byte[] pApiVersion);
-            [MarshalAs(UnmanagedType.VBByRefStr)] ref string pApiVersion);
+            [Out][MarshalAs(UnmanagedType.LPArray, SizeConst = 80)]
+            byte[] pFirmwareVersion,
+            
+            [Out][MarshalAs(UnmanagedType.LPArray, SizeConst = 80)]
+            byte[] pDllVersion,
+            
+            [Out][MarshalAs(UnmanagedType.LPArray, SizeConst = 80)]
+            byte[] pApiVersion);
+
 
         /// <summary>
         /// Retrieve error information regarding a previous PassThru API call.
